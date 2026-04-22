@@ -1,12 +1,10 @@
 import { useMemo, useState } from "react";
-import kidPhoto from "./assets/kid.jpg";
 
 function generateQuestion() {
   const isAdd = Math.random() < 0.5;
 
   if (isAdd) {
     // 加法：只出需要湊十的題
-    // a: 1~9, b: 1~9, 且 a+b <= 18, 且 a+b > 10
     let a, b;
     do {
       a = Math.floor(Math.random() * 9) + 1;
@@ -25,7 +23,7 @@ function generateQuestion() {
   let a, b;
   do {
     a = Math.floor(Math.random() * 8) + 11; // 11~18
-    b = Math.floor(Math.random() * 9) + 1;  // 1~9
+    b = Math.floor(Math.random() * 9) + 1; // 1~9
   } while (b <= a % 10 || b > a);
 
   return {
@@ -44,12 +42,13 @@ function PinkInput({ value, onChange }) {
       inputMode="numeric"
       maxLength={2}
       style={{
-        width: 54,
-        height: 44,
+        width: 70,
+        height: 60,
         border: "3px solid #eea9d4",
         background: "#fff",
         color: "#2b39d1",
-        fontSize: 20,
+        fontSize: 24,
+        letterSpacing: "1px",
         textAlign: "center",
         boxSizing: "border-box",
         outline: "none",
@@ -66,25 +65,33 @@ function AddSplitDiagram({
   onRightChange,
 }) {
   return (
-    <div style={{ marginTop: 20 }}>
-      <svg width="180" height="190" viewBox="0 0 180 190">
-        <text x="90" y="22" textAnchor="middle" fontSize="28" fill="#2b39d1">
+    <div style={{ marginTop: 6 }}>
+      <svg width="220" height="190" viewBox="0 0 220 190">
+        <text x="110" y="24" textAnchor="middle" fontSize="28" fill="#2b39d1">
           {b}
         </text>
 
-        <line x1="90" y1="40" x2="55" y2="72" stroke="#777" strokeWidth="2" />
-        <line x1="90" y1="40" x2="125" y2="72" stroke="#777" strokeWidth="2" />
+        <line x1="110" y1="38" x2="75" y2="78" stroke="#777" strokeWidth="2" />
+        <line x1="110" y1="38" x2="145" y2="78" stroke="#777" strokeWidth="2" />
 
-        <foreignObject x="28" y="72" width="70" height="70">
+        <line x1="0" y1="16" x2="75" y2="98" stroke="#777" strokeWidth="2" />
+
+        <foreignObject x="40" y="78" width="70" height="60">
           <PinkInput value={leftValue} onChange={onLeftChange} />
         </foreignObject>
 
-        <foreignObject x="98" y="72" width="70" height="70">
+        <foreignObject x="120" y="78" width="70" height="60">
           <PinkInput value={rightValue} onChange={onRightChange} />
         </foreignObject>
 
-        <line x1="55" y1="130" x2="55" y2="138" stroke="#777" strokeWidth="2" />
-        <text x="55" y="170" textAnchor="middle" fontSize="24" fill="#2b39d1">
+        <line x1="75" y1="140" x2="75" y2="158" stroke="#777" strokeWidth="2" />
+        <text
+          x="75"
+          y="184"
+          textAnchor="middle"
+          fontSize="24"
+          fill="#2b39d1"
+        >
           10
         </text>
       </svg>
@@ -100,20 +107,20 @@ function SubSplitDiagram({
   onRightChange,
 }) {
   return (
-    <div style={{ marginTop: 20 }}>
-      <svg width="180" height="150" viewBox="0 0 180 150">
-        <text x="90" y="22" textAnchor="middle" fontSize="28" fill="#2b39d1">
+    <div style={{ marginTop: 12 }}>
+      <svg width="220" height="150" viewBox="0 0 220 150">
+        <text x="110" y="24" textAnchor="middle" fontSize="28" fill="#2b39d1">
           {a}
         </text>
 
-        <line x1="90" y1="34" x2="55" y2="72" stroke="#777" strokeWidth="2" />
-        <line x1="90" y1="34" x2="125" y2="72" stroke="#777" strokeWidth="2" />
+        <line x1="110" y1="38" x2="75" y2="78" stroke="#777" strokeWidth="2" />
+        <line x1="110" y1="38" x2="145" y2="78" stroke="#777" strokeWidth="2" />
 
-        <foreignObject x="28" y="72" width="70" height="80">
+        <foreignObject x="40" y="78" width="70" height="60">
           <PinkInput value={leftValue} onChange={onLeftChange} />
         </foreignObject>
 
-        <foreignObject x="98" y="72" width="70" height="80">
+        <foreignObject x="120" y="78" width="70" height="60">
           <PinkInput value={rightValue} onChange={onRightChange} />
         </foreignObject>
       </svg>
@@ -160,13 +167,22 @@ function Explanation({ type, a, b }) {
     >
       <div>10 − {b} = {first}</div>
       <div>
-        {first} + {ones} = 
-      </div>
-      <div>
+        {first} + {ones} =
       </div>
     </div>
   );
 }
+
+const keypadBtnStyle = {
+  width: "72px",
+  height: "58px",
+  fontSize: "24px",
+  borderRadius: "12px",
+  border: "none",
+  background: "#4e7ed9",
+  color: "#fff",
+  cursor: "pointer",
+};
 
 export default function App() {
   const [question, setQuestion] = useState(generateQuestion());
@@ -220,6 +236,21 @@ export default function App() {
     setStatus("");
   }
 
+  function handleKeypadPress(value) {
+    setInputAnswer((prev) => {
+      if (prev.length >= 2) return prev;
+      return prev + value;
+    });
+  }
+
+  function handleKeypadDelete() {
+    setInputAnswer((prev) => prev.slice(0, -1));
+  }
+
+  function handleKeypadClear() {
+    setInputAnswer("");
+  }
+
   return (
     <div
       style={{
@@ -246,6 +277,7 @@ export default function App() {
             fontWeight: 500,
             color: "#111",
             padding: "10px 20px",
+            textAlign: "center",
           }}
         >
           {titleText}
@@ -260,26 +292,46 @@ export default function App() {
               alignItems: "start",
             }}
           >
-            {/* 左邊改成放照片 */}
+            {/* 左邊改成數字鍵盤 */}
             <div
               style={{
+                minHeight: "320px",
                 display: "flex",
                 justifyContent: "center",
+                alignItems: "center",
                 paddingTop: 10,
               }}
             >
-              <img
-                src={kidPhoto}
-                alt="小朋友照片"
+              <div
                 style={{
-                  width: "100%",
-                  maxWidth: "340px",
-                  height: "auto",
-                  objectFit: "cover",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 72px)",
+                  gap: 12,
+                  justifyContent: "center",
                 }}
-              />
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handleKeypadPress(String(num))}
+                    style={keypadBtnStyle}
+                  >
+                    {num}
+                  </button>
+                ))}
+
+                <button onClick={handleKeypadDelete} style={keypadBtnStyle}>
+                  刪除
+                </button>
+
+                <button onClick={() => handleKeypadPress("0")} style={keypadBtnStyle}>
+                  0
+                </button>
+
+                <button onClick={handleKeypadClear} style={keypadBtnStyle}>
+                  清空
+                </button>
+              </div>
             </div>
 
             {/* 右邊算式與拆分圖 */}
@@ -366,7 +418,7 @@ export default function App() {
             background: "#d8efec",
             borderTop: "1px solid #c4dfdb",
             padding: "20px 20px 30px",
-            marginTop: 20,
+            marginTop: 10,
           }}
         >
           <Explanation type={type} a={a} b={b} />
@@ -382,10 +434,9 @@ export default function App() {
           >
             <input
               type="text"
-              inputMode="numeric"
               placeholder="答案"
               value={inputAnswer}
-              onChange={(e) => setInputAnswer(e.target.value)}
+              readOnly
               style={{
                 width: 180,
                 height: 56,
