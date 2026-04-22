@@ -22,8 +22,8 @@ function generateQuestion() {
   // 減法：十幾減個位數，且需要破十
   let a, b;
   do {
-    a = Math.floor(Math.random() * 8) + 11; // 11~18
-    b = Math.floor(Math.random() * 9) + 1; // 1~9
+    a = Math.floor(Math.random() * 8) + 11;
+    b = Math.floor(Math.random() * 9) + 1;
   } while (b <= a % 10 || b > a);
 
   return {
@@ -34,17 +34,17 @@ function generateQuestion() {
   };
 }
 
-function PinkInput({ value, onChange }) {
+function PinkInput({ value, onFocusField, isActive }) {
   return (
     <input
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-      inputMode="numeric"
-      maxLength={2}
+      readOnly
+      onFocus={onFocusField}
+      onClick={onFocusField}
       style={{
         width: 70,
         height: 60,
-        border: "3px solid #eea9d4",
+        border: isActive ? "4px solid #ff7ac8" : "3px solid #eea9d4",
         background: "#fff",
         color: "#2b39d1",
         fontSize: 24,
@@ -52,6 +52,8 @@ function PinkInput({ value, onChange }) {
         textAlign: "center",
         boxSizing: "border-box",
         outline: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
       }}
     />
   );
@@ -61,8 +63,8 @@ function AddSplitDiagram({
   b,
   leftValue,
   rightValue,
-  onLeftChange,
-  onRightChange,
+  setActiveField,
+  activeField,
 }) {
   return (
     <div style={{ marginTop: 6 }}>
@@ -77,11 +79,19 @@ function AddSplitDiagram({
         <line x1="0" y1="16" x2="75" y2="98" stroke="#777" strokeWidth="2" />
 
         <foreignObject x="40" y="78" width="70" height="60">
-          <PinkInput value={leftValue} onChange={onLeftChange} />
+          <PinkInput
+            value={leftValue}
+            onFocusField={() => setActiveField("splitLeft")}
+            isActive={activeField === "splitLeft"}
+          />
         </foreignObject>
 
         <foreignObject x="120" y="78" width="70" height="60">
-          <PinkInput value={rightValue} onChange={onRightChange} />
+          <PinkInput
+            value={rightValue}
+            onFocusField={() => setActiveField("splitRight")}
+            isActive={activeField === "splitRight"}
+          />
         </foreignObject>
 
         <line x1="75" y1="140" x2="75" y2="158" stroke="#777" strokeWidth="2" />
@@ -103,8 +113,8 @@ function SubSplitDiagram({
   a,
   leftValue,
   rightValue,
-  onLeftChange,
-  onRightChange,
+  setActiveField,
+  activeField,
 }) {
   return (
     <div style={{ marginTop: 12 }}>
@@ -117,11 +127,19 @@ function SubSplitDiagram({
         <line x1="110" y1="38" x2="145" y2="78" stroke="#777" strokeWidth="2" />
 
         <foreignObject x="40" y="78" width="70" height="60">
-          <PinkInput value={leftValue} onChange={onLeftChange} />
+          <PinkInput
+            value={leftValue}
+            onFocusField={() => setActiveField("splitLeft")}
+            isActive={activeField === "splitLeft"}
+          />
         </foreignObject>
 
         <foreignObject x="120" y="78" width="70" height="60">
-          <PinkInput value={rightValue} onChange={onRightChange} />
+          <PinkInput
+            value={rightValue}
+            onFocusField={() => setActiveField("splitRight")}
+            isActive={activeField === "splitRight"}
+          />
         </foreignObject>
       </svg>
     </div>
@@ -190,6 +208,7 @@ export default function App() {
   const [splitRight, setSplitRight] = useState("");
   const [inputAnswer, setInputAnswer] = useState("");
   const [status, setStatus] = useState("");
+  const [activeField, setActiveField] = useState("answer");
 
   const { type, a, b, answer } = question;
   const operator = type === "add" ? "+" : "-";
@@ -229,14 +248,32 @@ export default function App() {
     setSplitRight("");
     setInputAnswer("");
     setStatus("");
+    setActiveField("answer");
   }
 
   function handleRetry() {
     setInputAnswer("");
     setStatus("");
+    setActiveField("answer");
   }
 
   function handleKeypadPress(value) {
+    if (activeField === "splitLeft") {
+      setSplitLeft((prev) => {
+        if (prev.length >= 2) return prev;
+        return prev + value;
+      });
+      return;
+    }
+
+    if (activeField === "splitRight") {
+      setSplitRight((prev) => {
+        if (prev.length >= 2) return prev;
+        return prev + value;
+      });
+      return;
+    }
+
     setInputAnswer((prev) => {
       if (prev.length >= 2) return prev;
       return prev + value;
@@ -244,10 +281,30 @@ export default function App() {
   }
 
   function handleKeypadDelete() {
+    if (activeField === "splitLeft") {
+      setSplitLeft((prev) => prev.slice(0, -1));
+      return;
+    }
+
+    if (activeField === "splitRight") {
+      setSplitRight((prev) => prev.slice(0, -1));
+      return;
+    }
+
     setInputAnswer((prev) => prev.slice(0, -1));
   }
 
   function handleKeypadClear() {
+    if (activeField === "splitLeft") {
+      setSplitLeft("");
+      return;
+    }
+
+    if (activeField === "splitRight") {
+      setSplitRight("");
+      return;
+    }
+
     setInputAnswer("");
   }
 
@@ -292,7 +349,7 @@ export default function App() {
               alignItems: "start",
             }}
           >
-            {/* 左邊改成數字鍵盤 */}
+            {/* 左邊數字鍵盤 */}
             <div
               style={{
                 minHeight: "320px",
@@ -302,40 +359,66 @@ export default function App() {
                 paddingTop: 10,
               }}
             >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 72px)",
-                  gap: 12,
-                  justifyContent: "center",
-                }}
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <div>
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginBottom: 12,
+                    fontSize: "18px",
+                    color: "#666",
+                  }}
+                >
+                  {activeField === "splitLeft"
+                    ? "正在輸入：左邊粉紅框"
+                    : activeField === "splitRight"
+                    ? "正在輸入：右邊粉紅框"
+                    : "正在輸入：答案"}
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 72px)",
+                    gap: 12,
+                    justifyContent: "center",
+                  }}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleKeypadPress(String(num))}
+                      style={keypadBtnStyle}
+                    >
+                      {num}
+                    </button>
+                  ))}
+
+                  <button onClick={handleKeypadDelete} style={keypadBtnStyle}>
+                    刪除
+                  </button>
+
                   <button
-                    key={num}
-                    onClick={() => handleKeypadPress(String(num))}
+                    onClick={() => handleKeypadPress("0")}
                     style={keypadBtnStyle}
                   >
-                    {num}
+                    0
                   </button>
-                ))}
 
-                <button onClick={handleKeypadDelete} style={keypadBtnStyle}>
-                  刪除
-                </button>
-
-                <button onClick={() => handleKeypadPress("0")} style={keypadBtnStyle}>
-                  0
-                </button>
-
-                <button onClick={handleKeypadClear} style={keypadBtnStyle}>
-                  清空
-                </button>
+                  <button onClick={handleKeypadClear} style={keypadBtnStyle}>
+                    清空
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* 右邊算式與拆分圖 */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               {type === "add" ? (
                 <div
                   style={{
@@ -359,8 +442,8 @@ export default function App() {
                       b={b}
                       leftValue={splitLeft}
                       rightValue={splitRight}
-                      onLeftChange={setSplitLeft}
-                      onRightChange={setSplitRight}
+                      setActiveField={setActiveField}
+                      activeField={activeField}
                     />
                   </div>
 
@@ -391,8 +474,8 @@ export default function App() {
                       a={a}
                       leftValue={splitLeft}
                       rightValue={splitRight}
-                      onLeftChange={setSplitLeft}
-                      onRightChange={setSplitRight}
+                      setActiveField={setActiveField}
+                      activeField={activeField}
                     />
                   </div>
 
@@ -437,15 +520,21 @@ export default function App() {
               placeholder="答案"
               value={inputAnswer}
               readOnly
+              onClick={() => setActiveField("answer")}
               style={{
                 width: 180,
                 height: 56,
                 fontSize: 32,
                 textAlign: "center",
-                border: "2px solid #aaa",
+                border:
+                  activeField === "answer"
+                    ? "3px solid #4e7ed9"
+                    : "2px solid #aaa",
                 borderRadius: 8,
                 background: "#fff",
                 color: "#222",
+                outline: "none",
+                cursor: "pointer",
               }}
             />
 
