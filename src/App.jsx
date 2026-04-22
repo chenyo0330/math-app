@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 
-function generateQuestion() {
+/* =========================
+   加減法題目
+========================= */
+function generateArithmeticQuestion() {
   const isAdd = Math.random() < 0.5;
 
   if (isAdd) {
@@ -32,6 +35,37 @@ function generateQuestion() {
   };
 }
 
+/* =========================
+   時鐘題目
+========================= */
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+function generateClockQuestion(stage) {
+  const hour = randomInt(1, 12);
+
+  if (stage === 1) {
+    const minute = Math.random() < 0.5 ? 0 : 30;
+    return { hour, minute };
+  }
+
+  if (stage === 2) {
+    const minuteChoices = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+    const minute = minuteChoices[randomInt(0, minuteChoices.length - 1)];
+    return { hour, minute };
+  }
+
+  return { hour, minute: randomInt(0, 59) };
+}
+
+/* =========================
+   共用輸入框
+========================= */
 function PinkInput({ value, onFocusField, isActive }) {
   return (
     <input
@@ -57,6 +91,33 @@ function PinkInput({ value, onFocusField, isActive }) {
   );
 }
 
+function AnswerInput({ value, onFocusField, isActive, placeholder = "答案" }) {
+  return (
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={value}
+      readOnly
+      onClick={onFocusField}
+      style={{
+        width: 180,
+        height: 56,
+        fontSize: 32,
+        textAlign: "center",
+        border: isActive ? "3px solid #4e7ed9" : "2px solid #aaa",
+        borderRadius: 8,
+        background: "#fff",
+        color: "#222",
+        outline: "none",
+        cursor: "pointer",
+      }}
+    />
+  );
+}
+
+/* =========================
+   加減法拆解圖
+========================= */
 function AddSplitDiagram({
   b,
   leftValue,
@@ -143,7 +204,7 @@ function SubSplitDiagram({
   );
 }
 
-function Explanation({ type, a, b }) {
+function ArithmeticExplanation({ type, a, b }) {
   const ones = a % 10;
 
   if (type === "add") {
@@ -186,6 +247,9 @@ function Explanation({ type, a, b }) {
   );
 }
 
+/* =========================
+   共用數字鍵盤
+========================= */
 const keypadBtnStyle = {
   width: "72px",
   height: "58px",
@@ -197,8 +261,108 @@ const keypadBtnStyle = {
   cursor: "pointer",
 };
 
+function KeypadPanel({
+  activeLabel,
+  onPress,
+  onDelete,
+  onClear,
+}) {
+  return (
+    <div
+      style={{
+        minHeight: "320px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingTop: 10,
+      }}
+    >
+      <div>
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: 12,
+            fontSize: "18px",
+            color: "#666",
+          }}
+        >
+          {activeLabel}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 72px)",
+            gap: 12,
+            justifyContent: "center",
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <button
+              key={num}
+              onClick={() => onPress(String(num))}
+              style={keypadBtnStyle}
+            >
+              {num}
+            </button>
+          ))}
+
+          <button onClick={onDelete} style={keypadBtnStyle}>
+            刪除
+          </button>
+
+          <button onClick={() => onPress("0")} style={keypadBtnStyle}>
+            0
+          </button>
+
+          <button onClick={onClear} style={keypadBtnStyle}>
+            清空
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   頁面共用頂部
+========================= */
+function TopBar({ title, leftButton, rightButton }) {
+  return (
+    <div
+      style={{
+        background: "#d8e5fb",
+        padding: "10px 16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+      }}
+    >
+      <div>{leftButton}</div>
+
+      <div
+        style={{
+          flex: 1,
+          textAlign: "center",
+          fontSize: 30,
+          fontWeight: 500,
+          color: "#111",
+        }}
+      >
+        {title}
+      </div>
+
+      <div>{rightButton || <div style={{ width: 110 }} />}</div>
+    </div>
+  );
+}
+
+/* =========================
+   單元一：加減法
+========================= */
 function ArithmeticPractice({ onBack }) {
-  const [question, setQuestion] = useState(generateQuestion());
+  const [question, setQuestion] = useState(generateArithmeticQuestion());
   const [splitLeft, setSplitLeft] = useState("");
   const [splitRight, setSplitRight] = useState("");
   const [inputAnswer, setInputAnswer] = useState("");
@@ -238,7 +402,7 @@ function ArithmeticPractice({ onBack }) {
   }
 
   function handleNext() {
-    setQuestion(generateQuestion());
+    setQuestion(generateArithmeticQuestion());
     setSplitLeft("");
     setSplitRight("");
     setInputAnswer("");
@@ -256,7 +420,9 @@ function ArithmeticPractice({ onBack }) {
     if (activeField === "splitLeft") {
       setSplitLeft((prev) => {
         if (prev.length >= 2) return prev;
-        return prev + value;
+        const next = prev + value;
+        if (next.length >= 2) setActiveField("splitRight");
+        return next;
       });
       return;
     }
@@ -264,7 +430,9 @@ function ArithmeticPractice({ onBack }) {
     if (activeField === "splitRight") {
       setSplitRight((prev) => {
         if (prev.length >= 2) return prev;
-        return prev + value;
+        const next = prev + value;
+        if (next.length >= 2) setActiveField("answer");
+        return next;
       });
       return;
     }
@@ -303,6 +471,13 @@ function ArithmeticPractice({ onBack }) {
     setInputAnswer("");
   }
 
+  const activeLabel =
+    activeField === "splitLeft"
+      ? "正在輸入：左邊粉紅框"
+      : activeField === "splitRight"
+      ? "正在輸入：右邊粉紅框"
+      : "正在輸入：答案";
+
   return (
     <div
       style={{
@@ -312,43 +487,17 @@ function ArithmeticPractice({ onBack }) {
         minHeight: "100vh",
       }}
     >
-      <div
-        style={{
-          background: "#d8e5fb",
-          padding: "10px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <button
-          onClick={onBack}
-          style={{
-            border: "none",
-            background: "#727892",
-            color: "#fff",
-            borderRadius: 8,
-            padding: "8px 14px",
-            fontSize: 18,
-            cursor: "pointer",
-          }}
-        >
-          返回首頁
-        </button>
-
-        <div
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 30,
-            fontWeight: 500,
-            color: "#111",
-            marginRight: 110,
-          }}
-        >
-          {titleText}
-        </div>
-      </div>
+      <TopBar
+        title={titleText}
+        leftButton={
+          <button
+            onClick={onBack}
+            style={smallBackBtn}
+          >
+            返回首頁
+          </button>
+        }
+      />
 
       <div style={{ padding: "28px 28px 20px" }}>
         <div
@@ -359,66 +508,12 @@ function ArithmeticPractice({ onBack }) {
             alignItems: "start",
           }}
         >
-          <div
-            style={{
-              minHeight: "320px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              paddingTop: 10,
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  textAlign: "center",
-                  marginBottom: 12,
-                  fontSize: "18px",
-                  color: "#666",
-                }}
-              >
-                {activeField === "splitLeft"
-                  ? "正在輸入：左邊粉紅框"
-                  : activeField === "splitRight"
-                  ? "正在輸入：右邊粉紅框"
-                  : "正在輸入：答案"}
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 72px)",
-                  gap: 12,
-                  justifyContent: "center",
-                }}
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                  <button
-                    key={num}
-                    onClick={() => handleKeypadPress(String(num))}
-                    style={keypadBtnStyle}
-                  >
-                    {num}
-                  </button>
-                ))}
-
-                <button onClick={handleKeypadDelete} style={keypadBtnStyle}>
-                  刪除
-                </button>
-
-                <button
-                  onClick={() => handleKeypadPress("0")}
-                  style={keypadBtnStyle}
-                >
-                  0
-                </button>
-
-                <button onClick={handleKeypadClear} style={keypadBtnStyle}>
-                  清空
-                </button>
-              </div>
-            </div>
-          </div>
+          <KeypadPanel
+            activeLabel={activeLabel}
+            onPress={handleKeypadPress}
+            onDelete={handleKeypadDelete}
+            onClear={handleKeypadClear}
+          />
 
           <div
             style={{
@@ -512,7 +607,7 @@ function ArithmeticPractice({ onBack }) {
           marginTop: 10,
         }}
       >
-        <Explanation type={type} a={a} b={b} />
+        <ArithmeticExplanation type={type} a={a} b={b} />
 
         <div
           style={{
@@ -523,111 +618,368 @@ function ArithmeticPractice({ onBack }) {
             flexWrap: "wrap",
           }}
         >
-          <input
-            type="text"
-            placeholder="答案"
+          <AnswerInput
             value={inputAnswer}
-            readOnly
-            onClick={() => setActiveField("answer")}
-            style={{
-              width: 180,
-              height: 56,
-              fontSize: 32,
-              textAlign: "center",
-              border:
-                activeField === "answer"
-                  ? "3px solid #4e7ed9"
-                  : "2px solid #aaa",
-              borderRadius: 8,
-              background: "#fff",
-              color: "#222",
-              outline: "none",
-              cursor: "pointer",
-            }}
+            onFocusField={() => setActiveField("answer")}
+            isActive={activeField === "answer"}
+            placeholder="答案"
           />
 
           <button
             onClick={handleCheck}
-            style={{
-              minWidth: 150,
-              height: 56,
-              fontSize: 24,
-              border: "none",
-              borderRadius: 8,
-              background: "#4e7ed9",
-              color: "#fff",
-              cursor: "pointer",
-            }}
+            style={confirmBtnStyle}
           >
             確認答案
           </button>
         </div>
 
         {status === "correct" && (
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <div
-              style={{
-                color: "#25a344",
-                fontSize: 40,
-                fontWeight: 700,
-                marginBottom: 12,
-              }}
-            >
-              ✓ 正確！
-            </div>
-            <button
-              onClick={handleNext}
-              style={{
-                minWidth: 130,
-                height: 52,
-                fontSize: 24,
-                border: "none",
-                borderRadius: 8,
-                background: "#727892",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              下一題
-            </button>
-          </div>
+          <ResultBlock
+            text="✓ 正確！"
+            color="#25a344"
+            buttonText="下一題"
+            onClick={handleNext}
+          />
         )}
 
         {status === "wrong" && (
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <div
-              style={{
-                color: "#d74c4c",
-                fontSize: 34,
-                fontWeight: 700,
-                marginBottom: 12,
-              }}
-            >
-              ✕ 再試一次
-            </div>
-            <button
-              onClick={handleRetry}
-              style={{
-                minWidth: 130,
-                height: 52,
-                fontSize: 24,
-                border: "none",
-                borderRadius: 8,
-                background: "#727892",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              重試
-            </button>
-          </div>
+          <ResultBlock
+            text="✕ 再試一次"
+            color="#d74c4c"
+            buttonText="重試"
+            onClick={handleRetry}
+          />
         )}
       </div>
     </div>
   );
 }
 
-function ClockStagePlaceholder({ title, onBack, onBackToClock }) {
+/* =========================
+   時鐘元件
+========================= */
+function ClockFace({ hour, minute, variant = "sun" }) {
+  const center = 150;
+  const radius = 105;
+
+  const minuteAngle = minute * 6;
+  const hourAngle = ((hour % 12) + minute / 60) * 30;
+  const secondAngle = 0;
+
+  function handPoint(length, angleDeg) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return {
+      x: center + length * Math.cos(rad),
+      y: center + length * Math.sin(rad),
+    };
+  }
+
+  const hourPt = handPoint(54, hourAngle);
+  const minutePt = handPoint(78, minuteAngle);
+  const secondPt = handPoint(88, secondAngle);
+
+  const frame =
+    variant === "sun"
+      ? {
+          outer: "#ffcc4d",
+          inner: "#fffaf0",
+          accent: "#f5a623",
+          bg: "#e9f6ff",
+        }
+      : variant === "rainbow"
+      ? {
+          outer: "#9bd0ff",
+          inner: "#fffef7",
+          accent: "#70b7ff",
+          bg: "#f6f0ff",
+        }
+      : {
+          outer: "#9bd18b",
+          inner: "#fffef7",
+          accent: "#5ea75e",
+          bg: "#eef8ea",
+        };
+
+  return (
+    <svg width="320" height="320" viewBox="0 0 300 300">
+      {variant === "sun" && (
+        <>
+          {Array.from({ length: 16 }).map((_, i) => {
+            const angle = (i * 360) / 16;
+            const p1 = handPoint(128, angle);
+            const p2 = handPoint(144, angle - 7);
+            const p3 = handPoint(144, angle + 7);
+            return (
+              <polygon
+                key={i}
+                points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`}
+                fill="#ffb11b"
+              />
+            );
+          })}
+        </>
+      )}
+
+      {variant === "rainbow" && (
+        <>
+          <path
+            d="M30 120 A120 120 0 0 1 270 120"
+            fill="none"
+            stroke="#ffb3b3"
+            strokeWidth="18"
+          />
+          <path
+            d="M40 120 A110 110 0 0 1 260 120"
+            fill="none"
+            stroke="#ffd28f"
+            strokeWidth="16"
+          />
+          <path
+            d="M50 120 A100 100 0 0 1 250 120"
+            fill="none"
+            stroke="#fff08f"
+            strokeWidth="14"
+          />
+          <path
+            d="M60 120 A90 90 0 0 1 240 120"
+            fill="none"
+            stroke="#baf2a1"
+            strokeWidth="12"
+          />
+          <path
+            d="M70 120 A80 80 0 0 1 230 120"
+            fill="none"
+            stroke="#9bd0ff"
+            strokeWidth="10"
+          />
+          <path
+            d="M80 120 A70 70 0 0 1 220 120"
+            fill="none"
+            stroke="#d2b4ff"
+            strokeWidth="8"
+          />
+          <circle cx="40" cy="225" r="18" fill="#fff" />
+          <circle cx="58" cy="225" r="20" fill="#fff" />
+          <circle cx="255" cy="225" r="18" fill="#fff" />
+          <circle cx="238" cy="225" r="20" fill="#fff" />
+        </>
+      )}
+
+      {variant === "dino" && (
+        <>
+          <ellipse cx="150" cy="150" rx="132" ry="128" fill="#b9e3aa" />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <polygon
+              key={i}
+              points={`${215 + i * 10},${45 + i * 18} ${232 + i * 10},${
+                55 + i * 18
+              } ${218 + i * 10},${70 + i * 18}`}
+              fill="#4e9d58"
+            />
+          ))}
+          <circle cx="75" cy="58" r="4" fill="#3b6f3f" />
+          <circle cx="96" cy="48" r="7" fill="#fff" />
+          <circle cx="98" cy="48" r="3" fill="#111" />
+          <circle cx="120" cy="62" r="6" fill="#ffa4a4" />
+        </>
+      )}
+
+      <circle cx="150" cy="150" r="112" fill={frame.outer} />
+      <circle cx="150" cy="150" r="96" fill={frame.inner} stroke="#f0d38a" strokeWidth="2" />
+
+      {/* 分鐘刻度 */}
+      {Array.from({ length: 60 }).map((_, i) => {
+        const angle = i * 6;
+        const outer = handPoint(91, angle);
+        const inner = handPoint(i % 5 === 0 ? 82 : 86, angle);
+        const stroke =
+          variant === "sun" ? "#ff9c2a" : variant === "rainbow" ? "#5aa0e6" : "#4f9e51";
+        return (
+          <line
+            key={i}
+            x1={inner.x}
+            y1={inner.y}
+            x2={outer.x}
+            y2={outer.y}
+            stroke={stroke}
+            strokeWidth={i % 5 === 0 ? 2 : 1}
+          />
+        );
+      })}
+
+      {/* 12個數字 */}
+      {Array.from({ length: 12 }).map((_, idx) => {
+        const num = idx + 1;
+        const angle = num * 30;
+        const p = handPoint(70, angle);
+        return (
+          <text
+            key={num}
+            x={p.x}
+            y={p.y + 8}
+            textAnchor="middle"
+            fontSize="22"
+            fontWeight="700"
+            fill="#222"
+          >
+            {num}
+          </text>
+        );
+      })}
+
+      {/* 外圈 5 分鐘標示 */}
+      {variant !== "sun" &&
+        [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((m) => {
+          const angle = m === 60 ? 0 : m * 6;
+          const p = handPoint(108, angle);
+          const color = variant === "rainbow" ? "#2e7bd2" : "#2d8a37";
+          return (
+            <text
+              key={m}
+              x={p.x}
+              y={p.y + 6}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="700"
+              fill={color}
+            >
+              {m}
+            </text>
+          );
+        })}
+
+      {/* 時針 */}
+      <line
+        x1={150}
+        y1={150}
+        x2={hourPt.x}
+        y2={hourPt.y}
+        stroke="#1f63b7"
+        strokeWidth="8"
+        strokeLinecap="round"
+      />
+
+      {/* 分針 */}
+      <line
+        x1={150}
+        y1={150}
+        x2={minutePt.x}
+        y2={minutePt.y}
+        stroke="#ef4040"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+
+      {/* 秒針 */}
+      <line
+        x1={150}
+        y1={150}
+        x2={secondPt.x}
+        y2={secondPt.y}
+        stroke="#f5c000"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+
+      <circle cx="150" cy="150" r="7" fill="#ffd24d" stroke="#cc8a00" strokeWidth="2" />
+    </svg>
+  );
+}
+
+/* =========================
+   單元二：時鐘練習
+========================= */
+function ClockPractice({ stage, onBack, onBackToClockMenu }) {
+  const [question, setQuestion] = useState(generateClockQuestion(stage));
+  const [hourInput, setHourInput] = useState("");
+  const [minuteInput, setMinuteInput] = useState("");
+  const [status, setStatus] = useState("");
+  const [activeField, setActiveField] = useState("hour");
+
+  const { hour, minute } = question;
+
+  const title =
+    stage === 1
+      ? "時鐘練習：第一階段（整點、半點）"
+      : stage === 2
+      ? "時鐘練習：第二階段（5分單位）"
+      : "時鐘練習：第三階段（任意分鐘）";
+
+  const variant =
+    stage === 1 ? "sun" : stage === 2 ? "rainbow" : "dino";
+
+  function handleCheck() {
+    const hourCorrect = Number(hourInput) === hour;
+    const minuteCorrect = Number(minuteInput) === minute;
+
+    if (hourCorrect && minuteCorrect) {
+      setStatus("correct");
+    } else {
+      setStatus("wrong");
+    }
+  }
+
+  function handleNext() {
+    setQuestion(generateClockQuestion(stage));
+    setHourInput("");
+    setMinuteInput("");
+    setStatus("");
+    setActiveField("hour");
+  }
+
+  function handleRetry() {
+    setStatus("");
+    setActiveField("hour");
+  }
+
+  function handleKeypadPress(value) {
+    if (activeField === "hour") {
+      setHourInput((prev) => {
+        if (prev.length >= 2) return prev;
+        const next = prev + value;
+        const num = Number(next);
+        if (num >= 1 && num <= 12 && next.length >= 1) {
+          setActiveField("minute");
+        }
+        return next;
+      });
+      return;
+    }
+
+    setMinuteInput((prev) => {
+      if (prev.length >= 2) return prev;
+      return prev + value;
+    });
+  }
+
+  function handleKeypadDelete() {
+    if (activeField === "hour") {
+      setHourInput((prev) => prev.slice(0, -1));
+      return;
+    }
+
+    setMinuteInput((prev) => prev.slice(0, -1));
+  }
+
+  function handleKeypadClear() {
+    if (activeField === "hour") {
+      setHourInput("");
+      return;
+    }
+
+    setMinuteInput("");
+  }
+
+  const activeLabel =
+    activeField === "hour" ? "正在輸入：幾點" : "正在輸入：幾分";
+
+  const stageHint =
+    stage === 1
+      ? "這一關只會出整點和半點"
+      : stage === 2
+      ? "這一關以 5 分為單位"
+      : "這一關會出任意分鐘";
+
   return (
     <div
       style={{
@@ -637,82 +989,191 @@ function ClockStagePlaceholder({ title, onBack, onBackToClock }) {
         minHeight: "100vh",
       }}
     >
-      <div
-        style={{
-          background: "#d8e5fb",
-          padding: "10px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <button
-          onClick={onBack}
-          style={{
-            border: "none",
-            background: "#727892",
-            color: "#fff",
-            borderRadius: 8,
-            padding: "8px 14px",
-            fontSize: 18,
-            cursor: "pointer",
-          }}
-        >
-          返回首頁
-        </button>
+      <TopBar
+        title={title}
+        leftButton={
+          <button onClick={onBack} style={smallBackBtn}>
+            返回首頁
+          </button>
+        }
+        rightButton={
+          <button onClick={onBackToClockMenu} style={menuBtnStyle}>
+            返回階段選單
+          </button>
+        }
+      />
 
+      <div style={{ padding: "24px 24px 10px" }}>
         <div
           style={{
-            flex: 1,
             textAlign: "center",
-            fontSize: 30,
-            fontWeight: 500,
-            color: "#111",
+            color: "#666",
+            fontSize: 22,
+            marginBottom: 6,
           }}
         >
-          {title}
+          請看時鐘，輸入正確時間
         </div>
-
-        <button
-          onClick={onBackToClock}
+        <div
           style={{
-            border: "none",
-            background: "#4e7ed9",
-            color: "#fff",
-            borderRadius: 8,
-            padding: "8px 14px",
+            textAlign: "center",
+            color: "#888",
             fontSize: 18,
-            cursor: "pointer",
+            marginBottom: 10,
           }}
         >
-          返回階段選單
-        </button>
+          {stageHint}
+        </div>
+      </div>
+
+      <div style={{ padding: "10px 28px 20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
+            alignItems: "start",
+          }}
+        >
+          <KeypadPanel
+            activeLabel={activeLabel}
+            onPress={handleKeypadPress}
+            onDelete={handleKeypadDelete}
+            onClear={handleKeypadClear}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              paddingTop: 10,
+            }}
+          >
+            <ClockFace hour={hour} minute={minute} variant={variant} />
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                marginTop: 6,
+                flexWrap: "wrap",
+              }}
+            >
+              <AnswerInput
+                value={hourInput}
+                onFocusField={() => setActiveField("hour")}
+                isActive={activeField === "hour"}
+                placeholder="點"
+              />
+              <div style={{ fontSize: 28 }}>點</div>
+
+              <AnswerInput
+                value={minuteInput}
+                onFocusField={() => setActiveField("minute")}
+                isActive={activeField === "minute"}
+                placeholder="分"
+              />
+              <div style={{ fontSize: 28 }}>分</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div
         style={{
-          minHeight: "70vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 20,
-          padding: 24,
+          background: "#d8efec",
+          borderTop: "1px solid #c4dfdb",
+          padding: "20px 20px 30px",
+          marginTop: 10,
         }}
       >
-        <div style={{ fontSize: 40 }}>🕒</div>
-        <div style={{ fontSize: 32, fontWeight: 700, color: "#2b39d1" }}>
-          {title}
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 24,
+            color: "#444",
+            marginBottom: 16,
+          }}
+        >
+          作答格式：{hour} 點 {pad2(minute)} 分
         </div>
-        <div style={{ fontSize: 24, color: "#555", textAlign: "center" }}>
-          這一階段的時鐘練習頁面，下一步我再幫你正式接上。
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 14,
+            flexWrap: "wrap",
+          }}
+        >
+          <button onClick={handleCheck} style={confirmBtnStyle}>
+            確認答案
+          </button>
         </div>
+
+        {status === "correct" && (
+          <ResultBlock
+            text="✓ 正確！"
+            color="#25a344"
+            buttonText="下一題"
+            onClick={handleNext}
+          />
+        )}
+
+        {status === "wrong" && (
+          <ResultBlock
+            text="✕ 再試一次"
+            color="#d74c4c"
+            buttonText="重試"
+            onClick={handleRetry}
+          />
+        )}
       </div>
     </div>
   );
 }
 
+/* =========================
+   結果區塊
+========================= */
+function ResultBlock({ text, color, buttonText, onClick }) {
+  return (
+    <div style={{ textAlign: "center", marginTop: 24 }}>
+      <div
+        style={{
+          color,
+          fontSize: 40,
+          fontWeight: 700,
+          marginBottom: 12,
+        }}
+      >
+        {text}
+      </div>
+      <button
+        onClick={onClick}
+        style={{
+          minWidth: 130,
+          height: 52,
+          fontSize: 24,
+          border: "none",
+          borderRadius: 8,
+          background: "#727892",
+          color: "#fff",
+          cursor: "pointer",
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+}
+
+/* =========================
+   首頁 / 時鐘選單
+========================= */
 function HomePage({ onGoArithmetic, onGoClock }) {
   return (
     <div
@@ -759,14 +1220,7 @@ function HomePage({ onGoArithmetic, onGoClock }) {
       >
         <button
           onClick={onGoArithmetic}
-          style={{
-            border: "none",
-            borderRadius: 20,
-            padding: "28px 20px",
-            background: "#d8efec",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          }}
+          style={homeCardStyle("#d8efec")}
         >
           <div style={{ fontSize: 42, marginBottom: 10 }}>➕➖</div>
           <div style={{ fontSize: 30, fontWeight: 700, color: "#1f4aa8" }}>
@@ -779,14 +1233,7 @@ function HomePage({ onGoArithmetic, onGoClock }) {
 
         <button
           onClick={onGoClock}
-          style={{
-            border: "none",
-            borderRadius: 20,
-            padding: "28px 20px",
-            background: "#fff4d8",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          }}
+          style={homeCardStyle("#fff4d8")}
         >
           <div style={{ fontSize: 42, marginBottom: 10 }}>🕒</div>
           <div style={{ fontSize: 30, fontWeight: 700, color: "#9b5d00" }}>
@@ -821,18 +1268,7 @@ function ClockMenuPage({ onBack, onGoStage1, onGoStage2, onGoStage3 }) {
           marginBottom: 24,
         }}
       >
-        <button
-          onClick={onBack}
-          style={{
-            border: "none",
-            background: "#727892",
-            color: "#fff",
-            borderRadius: 8,
-            padding: "8px 14px",
-            fontSize: 18,
-            cursor: "pointer",
-          }}
-        >
+        <button onClick={onBack} style={smallBackBtn}>
           返回首頁
         </button>
 
@@ -858,60 +1294,30 @@ function ClockMenuPage({ onBack, onGoStage1, onGoStage2, onGoStage3 }) {
           margin: "0 auto",
         }}
       >
-        <button
-          onClick={onGoStage1}
-          style={{
-            border: "none",
-            borderRadius: 18,
-            padding: "24px 20px",
-            background: "#eaf4ff",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
+        <button onClick={onGoStage1} style={stageCardStyle("#eaf4ff")}>
           <div style={{ fontSize: 28, fontWeight: 700, color: "#1f4aa8" }}>
             第一階段
           </div>
           <div style={{ marginTop: 8, fontSize: 22, color: "#555" }}>
-            整點、半點
+            整點、半點（太陽款）
           </div>
         </button>
 
-        <button
-          onClick={onGoStage2}
-          style={{
-            border: "none",
-            borderRadius: 18,
-            padding: "24px 20px",
-            background: "#edf8e8",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div style={{ fontSize: 28, fontWeight: 700, color: "#2d7a28" }}>
+        <button onClick={onGoStage2} style={stageCardStyle("#f6f0ff")}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#8457d5" }}>
             第二階段
           </div>
           <div style={{ marginTop: 8, fontSize: 22, color: "#555" }}>
-            以 5 分為單位
+            5 分單位（彩虹款）
           </div>
         </button>
 
-        <button
-          onClick={onGoStage3}
-          style={{
-            border: "none",
-            borderRadius: 18,
-            padding: "24px 20px",
-            background: "#fff1f1",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div style={{ fontSize: 28, fontWeight: 700, color: "#b54747" }}>
+        <button onClick={onGoStage3} style={stageCardStyle("#eef8ea")}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#2d7a28" }}>
             第三階段
           </div>
           <div style={{ marginTop: 8, fontSize: 22, color: "#555" }}>
-            任意分鐘
+            任意分鐘（恐龍款）
           </div>
         </button>
       </div>
@@ -919,6 +1325,65 @@ function ClockMenuPage({ onBack, onGoStage1, onGoStage2, onGoStage3 }) {
   );
 }
 
+/* =========================
+   樣式
+========================= */
+const smallBackBtn = {
+  border: "none",
+  background: "#727892",
+  color: "#fff",
+  borderRadius: 8,
+  padding: "8px 14px",
+  fontSize: 18,
+  cursor: "pointer",
+};
+
+const menuBtnStyle = {
+  border: "none",
+  background: "#4e7ed9",
+  color: "#fff",
+  borderRadius: 8,
+  padding: "8px 14px",
+  fontSize: 18,
+  cursor: "pointer",
+};
+
+const confirmBtnStyle = {
+  minWidth: 150,
+  height: 56,
+  fontSize: 24,
+  border: "none",
+  borderRadius: 8,
+  background: "#4e7ed9",
+  color: "#fff",
+  cursor: "pointer",
+};
+
+function homeCardStyle(bg) {
+  return {
+    border: "none",
+    borderRadius: 20,
+    padding: "28px 20px",
+    background: bg,
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  };
+}
+
+function stageCardStyle(bg) {
+  return {
+    border: "none",
+    borderRadius: 18,
+    padding: "24px 20px",
+    background: bg,
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  };
+}
+
+/* =========================
+   App
+========================= */
 export default function App() {
   const [page, setPage] = useState("home");
 
@@ -954,26 +1419,26 @@ export default function App() {
       )}
 
       {page === "clock-stage-1" && (
-        <ClockStagePlaceholder
-          title="時鐘練習：第一階段（整點、半點）"
+        <ClockPractice
+          stage={1}
           onBack={() => setPage("home")}
-          onBackToClock={() => setPage("clock-menu")}
+          onBackToClockMenu={() => setPage("clock-menu")}
         />
       )}
 
       {page === "clock-stage-2" && (
-        <ClockStagePlaceholder
-          title="時鐘練習：第二階段（5分單位）"
+        <ClockPractice
+          stage={2}
           onBack={() => setPage("home")}
-          onBackToClock={() => setPage("clock-menu")}
+          onBackToClockMenu={() => setPage("clock-menu")}
         />
       )}
 
       {page === "clock-stage-3" && (
-        <ClockStagePlaceholder
-          title="時鐘練習：第三階段（任意分鐘）"
+        <ClockPractice
+          stage={3}
           onBack={() => setPage("home")}
-          onBackToClock={() => setPage("clock-menu")}
+          onBackToClockMenu={() => setPage("clock-menu")}
         />
       )}
     </div>
