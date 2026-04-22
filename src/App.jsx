@@ -4,7 +4,6 @@ function generateQuestion() {
   const isAdd = Math.random() < 0.5;
 
   if (isAdd) {
-    // 加法：只出需要湊十的題
     let a, b;
     do {
       a = Math.floor(Math.random() * 9) + 1;
@@ -19,7 +18,6 @@ function generateQuestion() {
     };
   }
 
-  // 減法：十幾減個位數，且需要破十
   let a, b;
   do {
     a = Math.floor(Math.random() * 8) + 11;
@@ -75,7 +73,6 @@ function AddSplitDiagram({
 
         <line x1="110" y1="38" x2="75" y2="78" stroke="#777" strokeWidth="2" />
         <line x1="110" y1="38" x2="145" y2="78" stroke="#777" strokeWidth="2" />
-
         <line x1="0" y1="16" x2="75" y2="98" stroke="#777" strokeWidth="2" />
 
         <foreignObject x="40" y="78" width="70" height="60">
@@ -165,9 +162,7 @@ function Explanation({ type, a, b }) {
         <div>
           {a} + {need} = 10
         </div>
-        <div>
-          10 + {remain} =
-        </div>
+        <div>10 + {remain} =</div>
       </div>
     );
   }
@@ -202,7 +197,7 @@ const keypadBtnStyle = {
   cursor: "pointer",
 };
 
-export default function App() {
+function ArithmeticPractice({ onBack }) {
   const [question, setQuestion] = useState(generateQuestion());
   const [splitLeft, setSplitLeft] = useState("");
   const [splitRight, setSplitRight] = useState("");
@@ -311,6 +306,625 @@ export default function App() {
   return (
     <div
       style={{
+        width: "100%",
+        maxWidth: 950,
+        background: "#fff",
+        minHeight: "100vh",
+      }}
+    >
+      <div
+        style={{
+          background: "#d8e5fb",
+          padding: "10px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <button
+          onClick={onBack}
+          style={{
+            border: "none",
+            background: "#727892",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "8px 14px",
+            fontSize: 18,
+            cursor: "pointer",
+          }}
+        >
+          返回首頁
+        </button>
+
+        <div
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 30,
+            fontWeight: 500,
+            color: "#111",
+            marginRight: 110,
+          }}
+        >
+          {titleText}
+        </div>
+      </div>
+
+      <div style={{ padding: "28px 28px 20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
+            alignItems: "start",
+          }}
+        >
+          <div
+            style={{
+              minHeight: "320px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingTop: 10,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  textAlign: "center",
+                  marginBottom: 12,
+                  fontSize: "18px",
+                  color: "#666",
+                }}
+              >
+                {activeField === "splitLeft"
+                  ? "正在輸入：左邊粉紅框"
+                  : activeField === "splitRight"
+                  ? "正在輸入：右邊粉紅框"
+                  : "正在輸入：答案"}
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 72px)",
+                  gap: 12,
+                  justifyContent: "center",
+                }}
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handleKeypadPress(String(num))}
+                    style={keypadBtnStyle}
+                  >
+                    {num}
+                  </button>
+                ))}
+
+                <button onClick={handleKeypadDelete} style={keypadBtnStyle}>
+                  刪除
+                </button>
+
+                <button
+                  onClick={() => handleKeypadPress("0")}
+                  style={keypadBtnStyle}
+                >
+                  0
+                </button>
+
+                <button onClick={handleKeypadClear} style={keypadBtnStyle}>
+                  清空
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {type === "add" ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  fontSize: 60,
+                  color: "#2b39d1",
+                  marginTop: 20,
+                  fontWeight: 400,
+                }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <div>{a}</div>
+                </div>
+
+                <div style={{ marginLeft: 10 }}>{operator}</div>
+
+                <div style={{ textAlign: "center", marginLeft: 10 }}>
+                  <div>{b}</div>
+                  <AddSplitDiagram
+                    b={b}
+                    leftValue={splitLeft}
+                    rightValue={splitRight}
+                    setActiveField={setActiveField}
+                    activeField={activeField}
+                  />
+                </div>
+
+                <div style={{ marginLeft: 10 }}>=</div>
+                <div
+                  style={{
+                    marginLeft: 10,
+                    color: status === "correct" ? "#d74444" : "#2b39d1",
+                  }}
+                >
+                  {status === "correct" ? answer : "?"}
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  fontSize: 60,
+                  color: "#2b39d1",
+                  marginTop: 20,
+                  fontWeight: 400,
+                }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <div>{a}</div>
+                  <SubSplitDiagram
+                    a={a}
+                    leftValue={splitLeft}
+                    rightValue={splitRight}
+                    setActiveField={setActiveField}
+                    activeField={activeField}
+                  />
+                </div>
+
+                <div style={{ marginLeft: 10 }}>{operator}</div>
+                <div style={{ marginLeft: 10 }}>{b}</div>
+                <div style={{ marginLeft: 10 }}>=</div>
+                <div
+                  style={{
+                    marginLeft: 10,
+                    color: status === "correct" ? "#d74444" : "#2b39d1",
+                  }}
+                >
+                  {status === "correct" ? answer : "?"}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#d8efec",
+          borderTop: "1px solid #c4dfdb",
+          padding: "20px 20px 30px",
+          marginTop: 10,
+        }}
+      >
+        <Explanation type={type} a={a} b={b} />
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 14,
+            marginTop: 22,
+            flexWrap: "wrap",
+          }}
+        >
+          <input
+            type="text"
+            placeholder="答案"
+            value={inputAnswer}
+            readOnly
+            onClick={() => setActiveField("answer")}
+            style={{
+              width: 180,
+              height: 56,
+              fontSize: 32,
+              textAlign: "center",
+              border:
+                activeField === "answer"
+                  ? "3px solid #4e7ed9"
+                  : "2px solid #aaa",
+              borderRadius: 8,
+              background: "#fff",
+              color: "#222",
+              outline: "none",
+              cursor: "pointer",
+            }}
+          />
+
+          <button
+            onClick={handleCheck}
+            style={{
+              minWidth: 150,
+              height: 56,
+              fontSize: 24,
+              border: "none",
+              borderRadius: 8,
+              background: "#4e7ed9",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            確認答案
+          </button>
+        </div>
+
+        {status === "correct" && (
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <div
+              style={{
+                color: "#25a344",
+                fontSize: 40,
+                fontWeight: 700,
+                marginBottom: 12,
+              }}
+            >
+              ✓ 正確！
+            </div>
+            <button
+              onClick={handleNext}
+              style={{
+                minWidth: 130,
+                height: 52,
+                fontSize: 24,
+                border: "none",
+                borderRadius: 8,
+                background: "#727892",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              下一題
+            </button>
+          </div>
+        )}
+
+        {status === "wrong" && (
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <div
+              style={{
+                color: "#d74c4c",
+                fontSize: 34,
+                fontWeight: 700,
+                marginBottom: 12,
+              }}
+            >
+              ✕ 再試一次
+            </div>
+            <button
+              onClick={handleRetry}
+              style={{
+                minWidth: 130,
+                height: 52,
+                fontSize: 24,
+                border: "none",
+                borderRadius: 8,
+                background: "#727892",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              重試
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ClockStagePlaceholder({ title, onBack, onBackToClock }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 950,
+        background: "#fff",
+        minHeight: "100vh",
+      }}
+    >
+      <div
+        style={{
+          background: "#d8e5fb",
+          padding: "10px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <button
+          onClick={onBack}
+          style={{
+            border: "none",
+            background: "#727892",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "8px 14px",
+            fontSize: 18,
+            cursor: "pointer",
+          }}
+        >
+          返回首頁
+        </button>
+
+        <div
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 30,
+            fontWeight: 500,
+            color: "#111",
+          }}
+        >
+          {title}
+        </div>
+
+        <button
+          onClick={onBackToClock}
+          style={{
+            border: "none",
+            background: "#4e7ed9",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "8px 14px",
+            fontSize: 18,
+            cursor: "pointer",
+          }}
+        >
+          返回階段選單
+        </button>
+      </div>
+
+      <div
+        style={{
+          minHeight: "70vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 20,
+          padding: 24,
+        }}
+      >
+        <div style={{ fontSize: 40 }}>🕒</div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: "#2b39d1" }}>
+          {title}
+        </div>
+        <div style={{ fontSize: 24, color: "#555", textAlign: "center" }}>
+          這一階段的時鐘練習頁面，下一步我再幫你正式接上。
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HomePage({ onGoArithmetic, onGoClock }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 950,
+        background: "#fff",
+        minHeight: "100vh",
+        padding: "32px 24px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          fontSize: 42,
+          fontWeight: 700,
+          color: "#2b39d1",
+          marginBottom: 16,
+        }}
+      >
+        數學練習
+      </div>
+
+      <div
+        style={{
+          textAlign: "center",
+          fontSize: 22,
+          color: "#666",
+          marginBottom: 40,
+        }}
+      >
+        請選擇要練習的單元
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 24,
+          maxWidth: 620,
+          margin: "0 auto",
+        }}
+      >
+        <button
+          onClick={onGoArithmetic}
+          style={{
+            border: "none",
+            borderRadius: 20,
+            padding: "28px 20px",
+            background: "#d8efec",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ fontSize: 42, marginBottom: 10 }}>➕➖</div>
+          <div style={{ fontSize: 30, fontWeight: 700, color: "#1f4aa8" }}>
+            單元一：加減法練習
+          </div>
+          <div style={{ marginTop: 8, fontSize: 20, color: "#555" }}>
+            加法湊十、減法破十
+          </div>
+        </button>
+
+        <button
+          onClick={onGoClock}
+          style={{
+            border: "none",
+            borderRadius: 20,
+            padding: "28px 20px",
+            background: "#fff4d8",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ fontSize: 42, marginBottom: 10 }}>🕒</div>
+          <div style={{ fontSize: 30, fontWeight: 700, color: "#9b5d00" }}>
+            單元二：時鐘練習
+          </div>
+          <div style={{ marginTop: 8, fontSize: 20, color: "#555" }}>
+            分三階段練習判讀時間
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ClockMenuPage({ onBack, onGoStage1, onGoStage2, onGoStage3 }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 950,
+        background: "#fff",
+        minHeight: "100vh",
+        padding: "24px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
+        <button
+          onClick={onBack}
+          style={{
+            border: "none",
+            background: "#727892",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "8px 14px",
+            fontSize: 18,
+            cursor: "pointer",
+          }}
+        >
+          返回首頁
+        </button>
+
+        <div
+          style={{
+            fontSize: 34,
+            fontWeight: 700,
+            color: "#9b5d00",
+          }}
+        >
+          單元二：時鐘練習
+        </div>
+
+        <div style={{ width: 110 }} />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 22,
+          maxWidth: 680,
+          margin: "0 auto",
+        }}
+      >
+        <button
+          onClick={onGoStage1}
+          style={{
+            border: "none",
+            borderRadius: 18,
+            padding: "24px 20px",
+            background: "#eaf4ff",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#1f4aa8" }}>
+            第一階段
+          </div>
+          <div style={{ marginTop: 8, fontSize: 22, color: "#555" }}>
+            整點、半點
+          </div>
+        </button>
+
+        <button
+          onClick={onGoStage2}
+          style={{
+            border: "none",
+            borderRadius: 18,
+            padding: "24px 20px",
+            background: "#edf8e8",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#2d7a28" }}>
+            第二階段
+          </div>
+          <div style={{ marginTop: 8, fontSize: 22, color: "#555" }}>
+            以 5 分為單位
+          </div>
+        </button>
+
+        <button
+          onClick={onGoStage3}
+          style={{
+            border: "none",
+            borderRadius: 18,
+            padding: "24px 20px",
+            background: "#fff1f1",
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#b54747" }}>
+            第三階段
+          </div>
+          <div style={{ marginTop: 8, fontSize: 22, color: "#555" }}>
+            任意分鐘
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [page, setPage] = useState("home");
+
+  return (
+    <div
+      style={{
         minHeight: "100vh",
         background: "#f2f2f2",
         display: "flex",
@@ -319,303 +933,49 @@ export default function App() {
           '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif',
       }}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 950,
-          background: "#fff",
-          minHeight: "100vh",
-        }}
-      >
-        <div
-          style={{
-            background: "#d8e5fb",
-            fontSize: 30,
-            fontWeight: 500,
-            color: "#111",
-            padding: "10px 20px",
-            textAlign: "center",
-          }}
-        >
-          {titleText}
-        </div>
+      {page === "home" && (
+        <HomePage
+          onGoArithmetic={() => setPage("arithmetic")}
+          onGoClock={() => setPage("clock-menu")}
+        />
+      )}
 
-        <div style={{ padding: "28px 28px 20px" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 24,
-              alignItems: "start",
-            }}
-          >
-            {/* 左邊數字鍵盤 */}
-            <div
-              style={{
-                minHeight: "320px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                paddingTop: 10,
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    textAlign: "center",
-                    marginBottom: 12,
-                    fontSize: "18px",
-                    color: "#666",
-                  }}
-                >
-                  {activeField === "splitLeft"
-                    ? "正在輸入：左邊粉紅框"
-                    : activeField === "splitRight"
-                    ? "正在輸入：右邊粉紅框"
-                    : "正在輸入：答案"}
-                </div>
+      {page === "arithmetic" && (
+        <ArithmeticPractice onBack={() => setPage("home")} />
+      )}
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 72px)",
-                    gap: 12,
-                    justifyContent: "center",
-                  }}
-                >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => handleKeypadPress(String(num))}
-                      style={keypadBtnStyle}
-                    >
-                      {num}
-                    </button>
-                  ))}
+      {page === "clock-menu" && (
+        <ClockMenuPage
+          onBack={() => setPage("home")}
+          onGoStage1={() => setPage("clock-stage-1")}
+          onGoStage2={() => setPage("clock-stage-2")}
+          onGoStage3={() => setPage("clock-stage-3")}
+        />
+      )}
 
-                  <button onClick={handleKeypadDelete} style={keypadBtnStyle}>
-                    刪除
-                  </button>
+      {page === "clock-stage-1" && (
+        <ClockStagePlaceholder
+          title="時鐘練習：第一階段（整點、半點）"
+          onBack={() => setPage("home")}
+          onBackToClock={() => setPage("clock-menu")}
+        />
+      )}
 
-                  <button
-                    onClick={() => handleKeypadPress("0")}
-                    style={keypadBtnStyle}
-                  >
-                    0
-                  </button>
+      {page === "clock-stage-2" && (
+        <ClockStagePlaceholder
+          title="時鐘練習：第二階段（5分單位）"
+          onBack={() => setPage("home")}
+          onBackToClock={() => setPage("clock-menu")}
+        />
+      )}
 
-                  <button onClick={handleKeypadClear} style={keypadBtnStyle}>
-                    清空
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* 右邊算式與拆分圖 */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              {type === "add" ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    fontSize: 60,
-                    color: "#2b39d1",
-                    marginTop: 20,
-                    fontWeight: 400,
-                  }}
-                >
-                  <div style={{ textAlign: "center" }}>
-                    <div>{a}</div>
-                  </div>
-
-                  <div style={{ marginLeft: 10 }}>{operator}</div>
-
-                  <div style={{ textAlign: "center", marginLeft: 10 }}>
-                    <div>{b}</div>
-                    <AddSplitDiagram
-                      b={b}
-                      leftValue={splitLeft}
-                      rightValue={splitRight}
-                      setActiveField={setActiveField}
-                      activeField={activeField}
-                    />
-                  </div>
-
-                  <div style={{ marginLeft: 10 }}>=</div>
-                  <div
-                    style={{
-                      marginLeft: 10,
-                      color: status === "correct" ? "#d74444" : "#2b39d1",
-                    }}
-                  >
-                    {status === "correct" ? answer : "?"}
-                  </div>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    fontSize: 60,
-                    color: "#2b39d1",
-                    marginTop: 20,
-                    fontWeight: 400,
-                  }}
-                >
-                  <div style={{ textAlign: "center" }}>
-                    <div>{a}</div>
-                    <SubSplitDiagram
-                      a={a}
-                      leftValue={splitLeft}
-                      rightValue={splitRight}
-                      setActiveField={setActiveField}
-                      activeField={activeField}
-                    />
-                  </div>
-
-                  <div style={{ marginLeft: 10 }}>{operator}</div>
-                  <div style={{ marginLeft: 10 }}>{b}</div>
-                  <div style={{ marginLeft: 10 }}>=</div>
-                  <div
-                    style={{
-                      marginLeft: 10,
-                      color: status === "correct" ? "#d74444" : "#2b39d1",
-                    }}
-                  >
-                    {status === "correct" ? answer : "?"}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: "#d8efec",
-            borderTop: "1px solid #c4dfdb",
-            padding: "20px 20px 30px",
-            marginTop: 10,
-          }}
-        >
-          <Explanation type={type} a={a} b={b} />
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 14,
-              marginTop: 22,
-              flexWrap: "wrap",
-            }}
-          >
-            <input
-              type="text"
-              placeholder="答案"
-              value={inputAnswer}
-              readOnly
-              onClick={() => setActiveField("answer")}
-              style={{
-                width: 180,
-                height: 56,
-                fontSize: 32,
-                textAlign: "center",
-                border:
-                  activeField === "answer"
-                    ? "3px solid #4e7ed9"
-                    : "2px solid #aaa",
-                borderRadius: 8,
-                background: "#fff",
-                color: "#222",
-                outline: "none",
-                cursor: "pointer",
-              }}
-            />
-
-            <button
-              onClick={handleCheck}
-              style={{
-                minWidth: 150,
-                height: 56,
-                fontSize: 24,
-                border: "none",
-                borderRadius: 8,
-                background: "#4e7ed9",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              確認答案
-            </button>
-          </div>
-
-          {status === "correct" && (
-            <div style={{ textAlign: "center", marginTop: 24 }}>
-              <div
-                style={{
-                  color: "#25a344",
-                  fontSize: 40,
-                  fontWeight: 700,
-                  marginBottom: 12,
-                }}
-              >
-                ✓ 正確！
-              </div>
-              <button
-                onClick={handleNext}
-                style={{
-                  minWidth: 130,
-                  height: 52,
-                  fontSize: 24,
-                  border: "none",
-                  borderRadius: 8,
-                  background: "#727892",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                下一題
-              </button>
-            </div>
-          )}
-
-          {status === "wrong" && (
-            <div style={{ textAlign: "center", marginTop: 24 }}>
-              <div
-                style={{
-                  color: "#d74c4c",
-                  fontSize: 34,
-                  fontWeight: 700,
-                  marginBottom: 12,
-                }}
-              >
-                ✕ 再試一次
-              </div>
-              <button
-                onClick={handleRetry}
-                style={{
-                  minWidth: 130,
-                  height: 52,
-                  fontSize: 24,
-                  border: "none",
-                  borderRadius: 8,
-                  background: "#727892",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                重試
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      {page === "clock-stage-3" && (
+        <ClockStagePlaceholder
+          title="時鐘練習：第三階段（任意分鐘）"
+          onBack={() => setPage("home")}
+          onBackToClock={() => setPage("clock-menu")}
+        />
+      )}
     </div>
   );
 }
