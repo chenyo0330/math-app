@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 
 /* =========================
-   加減法題目
+   共用工具
+========================= */
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+/* =========================
+   單元一：加減法出題
 ========================= */
 function generateArithmeticQuestion() {
   const isAdd = Math.random() < 0.5;
@@ -36,16 +47,8 @@ function generateArithmeticQuestion() {
 }
 
 /* =========================
-   時鐘題目
+   單元二：時鐘出題
 ========================= */
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
-
 function generateClockQuestion(stage) {
   const hour = randomInt(1, 12);
 
@@ -91,16 +94,16 @@ function PinkInput({ value, onFocusField, isActive }) {
   );
 }
 
-function AnswerInput({ value, onFocusField, isActive, placeholder = "答案" }) {
+function AnswerInput({ value, onFocusField, isActive, placeholder = "--" }) {
   return (
     <input
       type="text"
-      placeholder={placeholder}
       value={value}
+      placeholder={placeholder}
       readOnly
       onClick={onFocusField}
       style={{
-        width: 180,
+        width: 140,
         height: 56,
         fontSize: 32,
         textAlign: "center",
@@ -116,7 +119,7 @@ function AnswerInput({ value, onFocusField, isActive, placeholder = "答案" }) 
 }
 
 /* =========================
-   加減法拆解圖
+   單元一：拆解圖
 ========================= */
 function AddSplitDiagram({
   b,
@@ -261,12 +264,7 @@ const keypadBtnStyle = {
   cursor: "pointer",
 };
 
-function KeypadPanel({
-  activeLabel,
-  onPress,
-  onDelete,
-  onClear,
-}) {
+function KeypadPanel({ activeLabel, onPress, onDelete, onClear }) {
   return (
     <div
       style={{
@@ -325,7 +323,7 @@ function KeypadPanel({
 }
 
 /* =========================
-   頁面共用頂部
+   共用頂部
 ========================= */
 function TopBar({ title, leftButton, rightButton }) {
   return (
@@ -356,6 +354,97 @@ function TopBar({ title, leftButton, rightButton }) {
       <div>{rightButton || <div style={{ width: 110 }} />}</div>
     </div>
   );
+}
+
+/* =========================
+   結果區
+========================= */
+function ResultBlock({ text, color, buttonText, onClick }) {
+  return (
+    <div style={{ textAlign: "center", marginTop: 24 }}>
+      <div
+        style={{
+          color,
+          fontSize: 40,
+          fontWeight: 700,
+          marginBottom: 12,
+        }}
+      >
+        {text}
+      </div>
+      <button
+        onClick={onClick}
+        style={{
+          minWidth: 130,
+          height: 52,
+          fontSize: 24,
+          border: "none",
+          borderRadius: 8,
+          background: "#727892",
+          color: "#fff",
+          cursor: "pointer",
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+}
+
+/* =========================
+   共用樣式
+========================= */
+const smallBackBtn = {
+  border: "none",
+  background: "#727892",
+  color: "#fff",
+  borderRadius: 8,
+  padding: "8px 14px",
+  fontSize: 18,
+  cursor: "pointer",
+};
+
+const menuBtnStyle = {
+  border: "none",
+  background: "#4e7ed9",
+  color: "#fff",
+  borderRadius: 8,
+  padding: "8px 14px",
+  fontSize: 18,
+  cursor: "pointer",
+};
+
+const confirmBtnStyle = {
+  minWidth: 150,
+  height: 56,
+  fontSize: 24,
+  border: "none",
+  borderRadius: 8,
+  background: "#4e7ed9",
+  color: "#fff",
+  cursor: "pointer",
+};
+
+function homeCardStyle(bg) {
+  return {
+    border: "none",
+    borderRadius: 20,
+    padding: "28px 20px",
+    background: bg,
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  };
+}
+
+function stageCardStyle(bg) {
+  return {
+    border: "none",
+    borderRadius: 18,
+    padding: "24px 20px",
+    background: bg,
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  };
 }
 
 /* =========================
@@ -420,9 +509,7 @@ function ArithmeticPractice({ onBack }) {
     if (activeField === "splitLeft") {
       setSplitLeft((prev) => {
         if (prev.length >= 2) return prev;
-        const next = prev + value;
-        if (next.length >= 2) setActiveField("splitRight");
-        return next;
+        return prev + value;
       });
       return;
     }
@@ -430,9 +517,7 @@ function ArithmeticPractice({ onBack }) {
     if (activeField === "splitRight") {
       setSplitRight((prev) => {
         if (prev.length >= 2) return prev;
-        const next = prev + value;
-        if (next.length >= 2) setActiveField("answer");
-        return next;
+        return prev + value;
       });
       return;
     }
@@ -490,10 +575,7 @@ function ArithmeticPractice({ onBack }) {
       <TopBar
         title={titleText}
         leftButton={
-          <button
-            onClick={onBack}
-            style={smallBackBtn}
-          >
+          <button onClick={onBack} style={smallBackBtn}>
             返回首頁
           </button>
         }
@@ -625,10 +707,7 @@ function ArithmeticPractice({ onBack }) {
             placeholder="答案"
           />
 
-          <button
-            onClick={handleCheck}
-            style={confirmBtnStyle}
-          >
+          <button onClick={handleCheck} style={confirmBtnStyle}>
             確認答案
           </button>
         </div>
@@ -658,13 +737,8 @@ function ArithmeticPractice({ onBack }) {
 /* =========================
    時鐘元件
 ========================= */
-function ClockFace({ hour, minute, variant = "sun" }) {
+function ClockFace({ hour, minute, variant = "sun", stage = 1 }) {
   const center = 150;
-  const radius = 105;
-
-  const minuteAngle = minute * 6;
-  const hourAngle = ((hour % 12) + minute / 60) * 30;
-  const secondAngle = 0;
 
   function handPoint(length, angleDeg) {
     const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -673,6 +747,10 @@ function ClockFace({ hour, minute, variant = "sun" }) {
       y: center + length * Math.sin(rad),
     };
   }
+
+  const minuteAngle = minute * 6;
+  const hourAngle = ((hour % 12) + minute / 60) * 30;
+  const secondAngle = 0;
 
   const hourPt = handPoint(54, hourAngle);
   const minutePt = handPoint(78, minuteAngle);
@@ -683,21 +761,21 @@ function ClockFace({ hour, minute, variant = "sun" }) {
       ? {
           outer: "#ffcc4d",
           inner: "#fffaf0",
-          accent: "#f5a623",
           bg: "#e9f6ff",
+          minuteText: "#ff7f2a",
         }
       : variant === "rainbow"
       ? {
           outer: "#9bd0ff",
           inner: "#fffef7",
-          accent: "#70b7ff",
           bg: "#f6f0ff",
+          minuteText: "#2e7bd2",
         }
       : {
           outer: "#9bd18b",
           inner: "#fffef7",
-          accent: "#5ea75e",
           bg: "#eef8ea",
+          minuteText: "#2d8a37",
         };
 
   return (
@@ -787,7 +865,6 @@ function ClockFace({ hour, minute, variant = "sun" }) {
       <circle cx="150" cy="150" r="112" fill={frame.outer} />
       <circle cx="150" cy="150" r="96" fill={frame.inner} stroke="#f0d38a" strokeWidth="2" />
 
-      {/* 分鐘刻度 */}
       {Array.from({ length: 60 }).map((_, i) => {
         const angle = i * 6;
         const outer = handPoint(91, angle);
@@ -807,7 +884,6 @@ function ClockFace({ hour, minute, variant = "sun" }) {
         );
       })}
 
-      {/* 12個數字 */}
       {Array.from({ length: 12 }).map((_, idx) => {
         const num = idx + 1;
         const angle = num * 30;
@@ -827,12 +903,11 @@ function ClockFace({ hour, minute, variant = "sun" }) {
         );
       })}
 
-      {/* 外圈 5 分鐘標示 */}
-      {variant !== "sun" &&
+      {/* 第一、二階段才顯示外圈 5 分標示；第三階段不顯示 */}
+      {stage !== 3 &&
         [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((m) => {
           const angle = m === 60 ? 0 : m * 6;
           const p = handPoint(108, angle);
-          const color = variant === "rainbow" ? "#2e7bd2" : "#2d8a37";
           return (
             <text
               key={m}
@@ -841,14 +916,13 @@ function ClockFace({ hour, minute, variant = "sun" }) {
               textAnchor="middle"
               fontSize="11"
               fontWeight="700"
-              fill={color}
+              fill={frame.minuteText}
             >
               {m}
             </text>
           );
         })}
 
-      {/* 時針 */}
       <line
         x1={150}
         y1={150}
@@ -859,7 +933,6 @@ function ClockFace({ hour, minute, variant = "sun" }) {
         strokeLinecap="round"
       />
 
-      {/* 分針 */}
       <line
         x1={150}
         y1={150}
@@ -870,7 +943,6 @@ function ClockFace({ hour, minute, variant = "sun" }) {
         strokeLinecap="round"
       />
 
-      {/* 秒針 */}
       <line
         x1={150}
         y1={150}
@@ -929,19 +1001,13 @@ function ClockPractice({ stage, onBack, onBackToClockMenu }) {
 
   function handleRetry() {
     setStatus("");
-    setActiveField("hour");
   }
 
   function handleKeypadPress(value) {
     if (activeField === "hour") {
       setHourInput((prev) => {
         if (prev.length >= 2) return prev;
-        const next = prev + value;
-        const num = Number(next);
-        if (num >= 1 && num <= 12 && next.length >= 1) {
-          setActiveField("minute");
-        }
-        return next;
+        return prev + value;
       });
       return;
     }
@@ -971,7 +1037,7 @@ function ClockPractice({ stage, onBack, onBackToClockMenu }) {
   }
 
   const activeLabel =
-    activeField === "hour" ? "正在輸入：幾點" : "正在輸入：幾分";
+    activeField === "hour" ? "正在輸入：小時" : "正在輸入：分鐘";
 
   const stageHint =
     stage === 1
@@ -1050,33 +1116,37 @@ function ClockPractice({ stage, onBack, onBackToClockMenu }) {
               paddingTop: 10,
             }}
           >
-            <ClockFace hour={hour} minute={minute} variant={variant} />
+            <ClockFace
+              hour={hour}
+              minute={minute}
+              variant={variant}
+              stage={stage}
+            />
 
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 12,
+                gap: 8,
                 marginTop: 6,
-                flexWrap: "wrap",
               }}
             >
               <AnswerInput
                 value={hourInput}
                 onFocusField={() => setActiveField("hour")}
                 isActive={activeField === "hour"}
-                placeholder="點"
+                placeholder="--"
               />
-              <div style={{ fontSize: 28 }}>點</div>
+
+              <div style={{ fontSize: 32, fontWeight: "bold" }}>:</div>
 
               <AnswerInput
                 value={minuteInput}
                 onFocusField={() => setActiveField("minute")}
                 isActive={activeField === "minute"}
-                placeholder="分"
+                placeholder="--"
               />
-              <div style={{ fontSize: 28 }}>分</div>
             </div>
           </div>
         </div>
@@ -1098,7 +1168,7 @@ function ClockPractice({ stage, onBack, onBackToClockMenu }) {
             marginBottom: 16,
           }}
         >
-          作答格式：{hour} 點 {pad2(minute)} 分
+          請輸入正確時間
         </div>
 
         <div
@@ -1116,7 +1186,7 @@ function ClockPractice({ stage, onBack, onBackToClockMenu }) {
 
         {status === "correct" && (
           <ResultBlock
-            text="✓ 正確！"
+            text={`✓ 正確！ ${hour}:${pad2(minute)}`}
             color="#25a344"
             buttonText="下一題"
             onClick={handleNext}
@@ -1137,42 +1207,7 @@ function ClockPractice({ stage, onBack, onBackToClockMenu }) {
 }
 
 /* =========================
-   結果區塊
-========================= */
-function ResultBlock({ text, color, buttonText, onClick }) {
-  return (
-    <div style={{ textAlign: "center", marginTop: 24 }}>
-      <div
-        style={{
-          color,
-          fontSize: 40,
-          fontWeight: 700,
-          marginBottom: 12,
-        }}
-      >
-        {text}
-      </div>
-      <button
-        onClick={onClick}
-        style={{
-          minWidth: 130,
-          height: 52,
-          fontSize: 24,
-          border: "none",
-          borderRadius: 8,
-          background: "#727892",
-          color: "#fff",
-          cursor: "pointer",
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-}
-
-/* =========================
-   首頁 / 時鐘選單
+   首頁 / 階段頁
 ========================= */
 function HomePage({ onGoArithmetic, onGoClock }) {
   return (
@@ -1218,10 +1253,7 @@ function HomePage({ onGoArithmetic, onGoClock }) {
           margin: "0 auto",
         }}
       >
-        <button
-          onClick={onGoArithmetic}
-          style={homeCardStyle("#d8efec")}
-        >
+        <button onClick={onGoArithmetic} style={homeCardStyle("#d8efec")}>
           <div style={{ fontSize: 42, marginBottom: 10 }}>➕➖</div>
           <div style={{ fontSize: 30, fontWeight: 700, color: "#1f4aa8" }}>
             單元一：加減法練習
@@ -1231,10 +1263,7 @@ function HomePage({ onGoArithmetic, onGoClock }) {
           </div>
         </button>
 
-        <button
-          onClick={onGoClock}
-          style={homeCardStyle("#fff4d8")}
-        >
+        <button onClick={onGoClock} style={homeCardStyle("#fff4d8")}>
           <div style={{ fontSize: 42, marginBottom: 10 }}>🕒</div>
           <div style={{ fontSize: 30, fontWeight: 700, color: "#9b5d00" }}>
             單元二：時鐘練習
@@ -1323,62 +1352,6 @@ function ClockMenuPage({ onBack, onGoStage1, onGoStage2, onGoStage3 }) {
       </div>
     </div>
   );
-}
-
-/* =========================
-   樣式
-========================= */
-const smallBackBtn = {
-  border: "none",
-  background: "#727892",
-  color: "#fff",
-  borderRadius: 8,
-  padding: "8px 14px",
-  fontSize: 18,
-  cursor: "pointer",
-};
-
-const menuBtnStyle = {
-  border: "none",
-  background: "#4e7ed9",
-  color: "#fff",
-  borderRadius: 8,
-  padding: "8px 14px",
-  fontSize: 18,
-  cursor: "pointer",
-};
-
-const confirmBtnStyle = {
-  minWidth: 150,
-  height: 56,
-  fontSize: 24,
-  border: "none",
-  borderRadius: 8,
-  background: "#4e7ed9",
-  color: "#fff",
-  cursor: "pointer",
-};
-
-function homeCardStyle(bg) {
-  return {
-    border: "none",
-    borderRadius: 20,
-    padding: "28px 20px",
-    background: bg,
-    cursor: "pointer",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-  };
-}
-
-function stageCardStyle(bg) {
-  return {
-    border: "none",
-    borderRadius: 18,
-    padding: "24px 20px",
-    background: bg,
-    cursor: "pointer",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-  };
 }
 
 /* =========================
